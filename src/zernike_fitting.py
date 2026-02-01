@@ -112,12 +112,12 @@ if __name__ == "__main__":
 
     # 生成真实Zernike相位（已知系数）
     true_coeffs = np.zeros(max_order)
-    # true_coeffs[1] = 0.6  # Z2: Tilt x
+    true_coeffs[1] = 0.6  # Z2: Tilt x
     true_coeffs[2] = 0.4  # Z3: Tilt y
-    # true_coeffs[3] = 1.2  # Z4: Focus
-    # true_coeffs[4] = 0.9  # Z5: Astigmatism x
-    # true_coeffs[6] = 0.7  # Z7: Coma x
-    # true_coeffs[8] = 0.5  # Z9: Spherical aberration
+    true_coeffs[3] = 1.2  # Z4: Focus
+    true_coeffs[4] = 0.9  # Z5: Astigmatism x
+    true_coeffs[6] = 0.7  # Z7: Coma x
+    true_coeffs[8] = 0.5  # Z9: Spherical aberration
 
     # 用用户的FringeZernike生成真实相位
     zernike_gen = FringeZernike(max_order=max_order, resolution=size)
@@ -130,7 +130,7 @@ if __name__ == "__main__":
         z_poly = zernike_gen.generate(idx)
         true_phase += true_coeffs[idx - 1] * z_poly
     true_phase = np.where(circle_mask, true_phase, np.nan)  # 圆外NaN
-    true_phase += np.random.normal(0, 0.001, true_phase.shape) * circle_mask  # 添加少量噪声
+    true_phase += np.random.normal(0, 0.01, true_phase.shape) * circle_mask  # 添加少量噪声
 
     print(f"✅ 测试数据生成成功：")
     print(f"   真实相位形状：{true_phase.shape}")
