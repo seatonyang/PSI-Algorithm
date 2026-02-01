@@ -112,3 +112,83 @@ class InterferogramSimulator:
         print(f"✅ 干涉图1 NaN像素数 = {np.sum(np.isnan(self.interferograms[0]))}")
 
         return self.interferograms, self.true_phase, self.rho, self.theta, self.circle_mask
+
+
+# ------------------------------
+# 自验证main函数（独立运行验证干涉图生成）
+# ------------------------------
+if __name__ == "__main__":
+    print("=" * 80)
+    print("InterferogramSimulator 自验证开始")
+    print("=" * 80)
+
+    # 1. 验证参数配置
+    img_size = (256, 256)  # 小尺寸加速验证
+    max_order = 8
+    true_coeffs = np.zeros(max_order)
+    true_coeffs[1] = 0.6  # 索引2: Tilt x
+    true_coeffs[3] = 1.2  # 索引4: Focus
+    phase_shifts = [0, np.pi / 2, np.pi, 3 * np.pi / 2]
+
+    # 2. 初始化仿真器
+    try:
+        simulator = InterferogramSimulator(
+            img_size=img_size,
+            max_order=max_order,
+            true_coeffs=true_coeffs,
+            phase_shifts=phase_shifts,
+            noise_std=0.01  # 低噪声便于验证
+        )
+        print(f"✅ 仿真器初始化成功（img_size={img_size}, max_order={max_order}）")
+    except Exception as e:
+        print(f"❌ 仿真器初始化失败：{e}")
+        exit(1)
+
+    # 3. 生成干涉图
+    try:
+        interferograms, true_phase, rho, theta, circle_mask = simulator.generate()
+        print(f"✅ 干涉图生成成功，形状：{interferograms.shape}")
+        print(f"✅ 真实相位形状：{true_phase.shape}")
+    except Exception as e:
+        print(f"❌ 干涉图生成失败：{e}")
+        exit(1)
+
+    # 4. 验证关键指标
+    min_size = min(img_size)
+    valid_pixels = np.sum(circle_mask)
+    expected_valid_pixels = int(np.pi * (min_size / 2) ** 2)  # 理论圆形像素数
+    print(f"\n📊 掩码验证：")
+    print(f"   理论有效像素数：{expected_valid_pixels}")
+    print(f"   实际有效像素数：{valid_pixels}")
+    print(f"   掩码覆盖率：{valid_pixels / (min_size * min_size) * 100:.2f}%")
+
+    print(f"\n📊 干涉图验证：")
+    for i in range(len(phase_shifts)):
+        non_nan_pixels = np.sum(~np.isnan(interferograms[i]))
+        print(f"   干涉图{i + 1} 非NaN像素数：{non_nan_pixels}（应等于有效像素数{valid_pixels}）")
+        print(f"   干涉图{i + 1} 光强范围：{np.nanmin(interferograms[i]):.4f} ~ {np.nanmax(interferograms[i]):.4f}")
+
+    # 5. 极简可视化验证（可选）
+    try:
+        import matplotlib.pyplot as plt
+
+        plt.rcParams['font.sans-serif'] = ['Arial']
+
+        # 绘制掩码+第一张干涉图
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
+        ax1.imshow(circle_mask, cmap='gray')
+        ax1.set_title('Circle Mask', fontsize=12)
+        ax1.axis('off')
+
+        ax2.imshow(interferograms[0], cmap='jet', vmin=0, vmax=2)
+        ax2.set_title('Interferogram 1 (Shift=0π)', fontsize=12)
+        ax2.axis('off')
+        plt.tight_layout()
+        plt.show()
+        print("✅ 可视化验证成功")
+    except Exception as e:
+        print(f"❌ 可视化验证失败：{e}")
+
+    print("=" * 80)
+    print("InterferogramSimulator 自验证完成")
+    print("=" * 80)

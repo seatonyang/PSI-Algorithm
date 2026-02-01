@@ -12,6 +12,7 @@
 import numpy as np
 from scipy.linalg import lstsq
 from fringe_zernike_generator import FringeZernike  # 导入用户的Zernike生成类
+import matplotlib.pyplot as plt
 
 
 class ZernikeFitter:
@@ -68,6 +69,11 @@ class ZernikeFitter:
         for idx in range(1, self.max_order + 1):
             # 用用户的generate方法生成对应Fringe索引的Zernike多项式
             zernike_poly = self.zernike_generator.generate(idx)
+            # plt.figure()
+            # plt.imshow(zernike_poly, cmap="jet")
+            # plt.colorbar()
+            # plt.title(idx)
+            # plt.show()
             # 仅提取圆形区域内的有效像素
             A[:, idx - 1] = zernike_poly[valid_mask]
 
@@ -81,3 +87,118 @@ class ZernikeFitter:
         self.fitted_phase[valid_mask] = fitted_phase_valid
 
         return self.fitted_coeffs, self.fitted_phase
+
+
+# ------------------------------
+# 自验证main函数（独立运行验证Zernike拟合）
+# ------------------------------
+if __name__ == "__main__":
+    print("=" * 80)
+    print("ZernikeFitter 自验证开始")
+    print("=" * 80)
+
+    # 1. 生成测试数据（模拟解包裹相位）
+    np.random.seed(42)
+    size = 512
+    max_order = 64
+
+    # 生成网格和掩码
+    x = np.linspace(-1, 1, size)
+    y = np.linspace(-1, 1, size)
+    xx, yy = np.meshgrid(x, y)
+    rho = np.sqrt(xx ** 2 + yy ** 2)
+    theta = np.arctan2(yy, xx)
+    circle_mask = (rho <= 1.0)
+
+    # 生成真实Zernike相位（已知系数）
+    true_coeffs = np.zeros(max_order)
+    # true_coeffs[1] = 0.6  # Z2: Tilt x
+    true_coeffs[2] = 0.4  # Z3: Tilt y
+    # true_coeffs[3] = 1.2  # Z4: Focus
+    # true_coeffs[4] = 0.9  # Z5: Astigmatism x
+    # true_coeffs[6] = 0.7  # Z7: Coma x
+    # true_coeffs[8] = 0.5  # Z9: Spherical aberration
+
+    # 用用户的FringeZernike生成真实相位
+    zernike_gen = FringeZernike(max_order=max_order, resolution=size)
+    zernike_gen.rr = rho  # 原始极径
+    zernike_gen.tt = theta  # 原始极角
+    zernike_gen.x = rho * np.cos(theta)
+    zernike_gen.y = rho * np.sin(theta)
+    true_phase = np.zeros((size, size))
+    for idx in range(1, max_order + 1):
+        z_poly = zernike_gen.generate(idx)
+        true_phase += true_coeffs[idx - 1] * z_poly
+    true_phase = np.where(circle_mask, true_phase, np.nan)  # 圆外NaN
+    true_phase += np.random.normal(0, 0.001, true_phase.shape) * circle_mask  # 添加少量噪声
+
+    print(f"✅ 测试数据生成成功：")
+    print(f"   真实相位形状：{true_phase.shape}")
+    print(f"   真实系数：{true_coeffs}")
+
+    # 2. 初始化拟合器
+    try:
+        fitter = ZernikeFitter(
+            unwrapped_phase=true_phase,
+            rho=rho,
+            theta=theta,
+            max_order=max_order,
+            circle_mask=circle_mask
+        )
+        print("✅ 拟合器初始化成功")
+    except Exception as e:
+        print(f"❌ 拟合器初始化失败：{e}")
+        exit(1)
+
+    # 3. 执行拟合
+    try:
+        fitted_coeffs, fitted_phase = fitter.fit()
+        print(f"✅ 拟合成功，拟合系数：{fitted_coeffs}")
+
+        # 计算拟合误差
+        coeff_rmse = np.sqrt(np.mean((true_coeffs - fitted_coeffs) ** 2))
+        phase_rmse = np.sqrt(np.nanmean((true_phase - fitted_phase) ** 2))
+        print(f"✅ 系数拟合RMSE：{coeff_rmse:.6f}（应接近0）")
+        print(f"✅ 相位拟合RMSE：{phase_rmse:.6f}（应接近0）")
+    except Exception as e:
+        print(f"❌ 拟合失败：{e}")
+        exit(1)
+
+    # 4. 极简可视化验证
+    try:
+        import matplotlib.pyplot as plt
+
+        plt.rcParams['font.sans-serif'] = ['Arial']
+
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 10))
+        # 真实相位
+        ax1.imshow(true_phase, cmap='jet')
+        ax1.set_title('True Phase', fontsize=12)
+        ax1.axis('off')
+        # 拟合相位
+        ax2.imshow(fitted_phase, cmap='jet')
+        ax2.set_title('Fitted Phase', fontsize=12)
+        ax2.axis('off')
+        # 系数对比
+        coeff_idx = np.arange(1, max_order + 1)
+        ax3.bar(coeff_idx - 0.2, true_coeffs, 0.4, label='True', alpha=0.8)
+        ax3.bar(coeff_idx + 0.2, fitted_coeffs, 0.4, label='Fitted', alpha=0.8)
+        ax3.set_xlabel('Fringe Index')
+        ax3.set_ylabel('Coefficient')
+        ax3.set_title('Coefficient Comparison')
+        ax3.legend()
+        # 拟合误差
+        error = np.abs(true_phase - fitted_phase)
+        ax4.imshow(error, cmap='jet')
+        ax4.set_title(f'Fitting Error (RMSE={phase_rmse:.4f})')
+        ax4.axis('off')
+
+        plt.tight_layout()
+        plt.show()
+        print("✅ 可视化验证成功")
+    except Exception as e:
+        print(f"❌ 可视化验证失败：{e}")
+
+    print("=" * 80)
+    print("ZernikeFitter 自验证完成")
+    print("=" * 80)
