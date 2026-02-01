@@ -3,7 +3,7 @@
 @Time        : 2026/2/1 11:33
 @Author      : Seaton
 @Email       : https://github.com/seatonyang
-@Project     : LSI_Algorithm
+@Project     : lsi-algorithm
 @File        : fringe_zernike_generator.py
 @Software    : PyCharm
 @Description :
