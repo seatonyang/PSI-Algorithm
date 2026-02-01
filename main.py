@@ -78,7 +78,7 @@ def main():
     fig1, axes1 = plt.subplots(1, 4, figsize=(16, 4))
     fig1.suptitle('Phase-Shifted Interferograms (Circle Masked)', fontsize=14)
     for i in range(4):
-        im = axes1[i].imshow(interferograms[i], cmap='jet', vmin=0, vmax=2)
+        im = axes1[i].imshow(interferograms[i], cmap='gray', vmin=0, vmax=2)
         axes1[i].set_title(f'Shift = {phase_shifts[i] / np.pi:.1f}π', fontsize=10)
         axes1[i].axis('off')
         plt.colorbar(im, ax=axes1[i], shrink=0.8)
