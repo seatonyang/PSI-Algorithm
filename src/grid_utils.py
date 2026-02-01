@@ -54,4 +54,3 @@ class GridGenerator:
         :return: 标准化相位（圆内保留值，圆外NaN）
         """
         return np.where(self.circle_mask, phase, np.nan)
-
