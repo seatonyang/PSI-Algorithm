@@ -7,18 +7,18 @@
 @File        : fringe_zernike_generator.py
 @Software    : PyCharm
 @Description :
-                文件作用：基于Fringe索引的Zernike多项式自动生成、数学表达式打印与论文风格可视化脚本
-                核心功能：
-                    1.  自动生成任意阶数（自定义max_order）的Fringe Zernike多项式，无需手动编写各阶表达式
-                    2.  支持打印单个/所有阶数的Zernike多项式数学表达式（径向部分+角向部分+完整形式）
-                    3.  绘制论文规范的阶梯图（按s=m+k分组、右对齐，默认jet色彩映射，标记m=0项）
-                    4.  支持单个多项式单独绘制，可自定义网格分辨率、色彩映射等参数
-                核心特性：
-                    - 严格遵循Fringe索引规则，适配光学检测、光刻等工程领域需求（区别于Noll/Standard排序）
-                    - 多项式定义完全匹配论文《Straightforward path to Zernike polynomials》
-                    - 完善的输入验证与错误处理，支持高分辨率网格生成，适配学术与工程仿真场景
-                依赖库：numpy, matplotlib
-                适用场景：光学系统像差分析、微光刻仿真、成像质量评估、学术研究中的Zernike多项式快速生成与验证
+文件作用：基于Fringe索引的Zernike多项式自动生成、数学表达式打印与论文风格可视化脚本
+核心功能：
+    1.  自动生成任意阶数（自定义max_order）的Fringe Zernike多项式，无需手动编写各阶表达式
+    2.  支持打印单个/所有阶数的Zernike多项式数学表达式（径向部分+角向部分+完整形式）
+    3.  绘制论文规范的阶梯图（按s=m+k分组、右对齐，默认jet色彩映射，标记m=0项）
+    4.  支持单个多项式单独绘制，可自定义网格分辨率、色彩映射等参数
+核心特性：
+    - 严格遵循Fringe索引规则，适配光学检测、光刻等工程领域需求（区别于Noll/Standard排序）
+    - 多项式定义完全匹配论文《Straightforward path to Zernike polynomials》
+    - 完善的输入验证与错误处理，支持高分辨率网格生成，适配学术与工程仿真场景
+依赖库：numpy, matplotlib
+适用场景：光学系统像差分析、微光刻仿真、成像质量评估、学术研究中的Zernike多项式快速生成与验证
 """
 
 import numpy as np
