@@ -1,6 +1,5 @@
-# Fringe Zernike 干涉图仿真：从仿真到拟合的全流程
 
-# FringeZernike-Interferogram-Simulation
+# PSI Algorithm：基于Fringe索引的Zernike拟合
 
 ![Static Badge](https://img.shields.io/badge/python-3.13-green)
 ![Static Badge](https://img.shields.io/badge/license-MIT-orange)
